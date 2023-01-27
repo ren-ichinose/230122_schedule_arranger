@@ -5,6 +5,7 @@ const authenticationEnsurer = require('./authentication-ensurer');
 const { v4: uuidv4 } = require('uuid');
 const Schedule = require('../models/schedule');
 const Candidate = require('../models/candidate');
+const User = require('../models/user');
 
 router.get('/new', authenticationEnsurer, (req, res, next) => {
   res.render('new', { user: req.user });
@@ -28,6 +29,36 @@ router.post('/', authenticationEnsurer, async (req, res, next) => {
   };});
   await Candidate.bulkCreate(candidates);
   res.redirect('/schedules/' + schedule.scheduleId);
+});
+
+router.get('/:scheduleId', authenticationEnsurer, async (req, res, next) => {
+  const schedule = await Schedule.findOne({
+    include: [
+      {
+        model: User,
+        attributes: ['userId', 'username']
+      }],
+    where: {
+      scheduleId: req.params.scheduleId
+    },
+    order: [['updatedAt', 'DESC']]
+  });
+  if (schedule) {
+    const candidates = await Candidate.findAll({
+      where: { scheduleId: schedule.scheduleId },
+      order: [['candidateId', 'ASC']]
+    });
+    res.render('schedule', {
+      user: req.user,
+      schedule: schedule,
+      candidates: candidates,
+      users: [req.user]
+    });
+  } else {
+    const err = new Error('指定された予定は見つかりません');
+    err.status = 404;
+    next(err);
+  }
 });
 
 module.exports = router;
