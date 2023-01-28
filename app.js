@@ -55,6 +55,7 @@ const loginRouter = require('./routes/login');
 const logoutRouter = require('./routes/logout');
 const schedulesRouter = require('./routes/schedules');
 const availabilitiesRouter = require('./routes/availabilities');
+const commentsRouter = require('./routes/comments');
 
 var app = express();
 app.use(helmet());
@@ -68,6 +69,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/schedules', commentsRouter);
 
 app.use(session({ 
   secret: process.env.SESSION_SECRET, 
