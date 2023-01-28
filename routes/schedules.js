@@ -99,10 +99,12 @@ router.get('/:scheduleId', authenticationEnsurer, async (req, res, next) => {
     const comments = await Comment.findAll({
       where: { scheduleId: schedule.scheduleId }
     });
+    console.log(`commentsだよ${comments}`);
     const commentMap = new Map();  // key: userId, value: comment
     comments.forEach((comment) => {
       commentMap.set(comment.userId, comment.comment);
     });
+    console.log(`commentMapだよ${commentMap}`);
     res.render('schedule', {
       user: req.user,
       schedule: schedule,
