@@ -99,12 +99,10 @@ router.get('/:scheduleId', authenticationEnsurer, async (req, res, next) => {
     const comments = await Comment.findAll({
       where: { scheduleId: schedule.scheduleId }
     });
-    console.log(`commentsだよ${comments}`);
     const commentMap = new Map();  // key: userId, value: comment
     comments.forEach((comment) => {
       commentMap.set(comment.userId, comment.comment);
     });
-    console.log(`commentMapだよ${commentMap}`);
     res.render('schedule', {
       user: req.user,
       schedule: schedule,
@@ -120,5 +118,32 @@ router.get('/:scheduleId', authenticationEnsurer, async (req, res, next) => {
     next(err);
   }
 });
+
+router.get('/:scheduleId/edit', authenticationEnsurer, async (req, res, next) => {
+  const schedule = await Schedule.findOne({
+    where: {
+      scheduleId: req.params.scheduleId
+    }
+  });
+  if (isMine(req, schedule)) { // 作成者のみが編集フォームを開ける
+    const candidates = await Candidate.findAll({
+      where: { scheduleId: schedule.scheduleId },
+      order: [['candidateId', 'ASC']]
+    });
+    res.render('edit', {
+      user: req.user,
+      schedule: schedule,
+      candidates: candidates
+    });
+  } else {
+    const err = new Error('指定された予定がない、または、予定する権限がありません');
+    err.status = 404;
+    next(err);
+  }
+});
+
+function isMine(req, schedule) {
+  return schedule && parseInt(schedule.createdBy) === parseInt(req.user.id);
+}
 
 module.exports = router;
